@@ -3,3 +3,5 @@
 *.token
 /build
 /dist
+debug/
+.idea/

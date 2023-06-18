@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"math"
 	"os/exec"
 	"path"
 	"regexp"
@@ -122,6 +123,57 @@ func (ffmpeg *FFMpeg) Convert(call *Call, systems *Systems, tags *Tags, mode uin
 			call.AudioName = fmt.Sprintf("%v.m4a", strings.TrimSuffix(v, path.Ext((v))))
 		}
 
+	} else {
+		fmt.Println(stderr.String())
+	}
+
+	return nil
+}
+
+func (ffmpeg *FFMpeg) GetDuration(call *Call, systems *Systems, tags *Tags, mode uint) error {
+	var (
+		args = []string{"-i", "-"}
+		err  error
+	)
+
+	if mode == AUDIO_CONVERSION_DISABLED {
+		return nil
+	}
+
+	if !ffmpeg.available {
+		if !ffmpeg.warned {
+			ffmpeg.warned = true
+
+			return errors.New("ffmpeg is not available, no audio conversion will be performed")
+		}
+		return nil
+	}
+
+	args = append(args, "-show_entries", "format=duration", "-v", "quiet", "-of", "csv=p=0")
+
+	cmd := exec.Command("ffprobe", args...)
+	cmd.Stdin = bytes.NewReader(call.Audio)
+
+	stdout := bytes.NewBuffer([]byte(nil))
+	cmd.Stdout = stdout
+
+	stderr := bytes.NewBuffer([]byte(nil))
+	cmd.Stderr = stderr
+
+	if err = cmd.Run(); err == nil {
+		var durationStr = stdout.String()
+		durationStr = strings.ReplaceAll(durationStr, "\n", "")
+		durationStr = strings.ReplaceAll(durationStr, "\r", "")
+
+		if s, err := strconv.ParseFloat(durationStr, 32); err == nil {
+			call.duration = int32(math.Round(s))
+			// fmt.Println(s) // 3.14159265
+		} else {
+			call.duration = 0
+		}
+
+		//call.duration = strconv.ParseFloat(durationStr, 32)
+		fmt.Println("filename", call.AudioName, "duration: ", call.duration)
 	} else {
 		fmt.Println(stderr.String())
 	}

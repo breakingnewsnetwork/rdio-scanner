@@ -57,6 +57,7 @@ export interface RdioScannerCall {
     sources?: RdioScannerCallSource[];
     system: number;
     talkgroup: number;
+    duration: number;
     talkgroupData?: RdioScannerTalkgroup;
     systemData?: RdioScannerSystem;
 }

@@ -284,6 +284,10 @@ func (controller *Controller) IngestCall(call *Call) {
 		controller.Logs.LogEvent(LogLevelWarn, err.Error())
 	}
 
+	if err := controller.FFMpeg.GetDuration(call, controller.Systems, controller.Tags, controller.Options.AudioConversion); err != nil {
+		controller.Logs.LogEvent(LogLevelWarn, err.Error())
+	}
+
 	if id, err = controller.Calls.WriteCall(call, controller.Database); err == nil {
 		call.Id = id
 		call.systemLabel = system.Label

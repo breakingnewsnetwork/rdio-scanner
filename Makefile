@@ -23,7 +23,7 @@ client := $(wildcard client/*.json client/*.ts)
 server := $(wildcard server/*.go)
 
 build = @cd server && GOOS=$(1) GOARCH=$(3) go build -o ../dist/$(2)-$(3)/$(4)
-pandoc = @test -d dist/$(1)-$(2) || mkdir -p dist/$(1)-$(2) && pandoc -f markdown -o dist/$(1)-$(2)/$(3) --resource-path docs:docs/platforms $(4) docs/webapp.md docs/faq.md CHANGELOG.md
+#pandoc = @test -d dist/$(1)-$(2) || mkdir -p dist/$(1)-$(2) && pandoc -f markdown -o dist/$(1)-$(2)/$(3) --resource-path docs:docs/platforms $(4) docs/webapp.md docs/faq.md CHANGELOG.md
 zip = @cd dist/$(1)-$(2) && zip -q ../$(app)-$(1)-$(2)-v$(ver).zip * && cd ..
 
 .PHONY: all clean container dist sed
@@ -61,7 +61,7 @@ freebsd: freebsd-amd64
 freebsd-amd64: webapp dist/$(app)-freebsd-amd64-v$(ver).zip
 
 dist/$(app)-freebsd-amd64-v$(ver).zip: $(server)
-	$(call pandoc,freebsd,amd64,rdio-scanner.pdf,docs/platforms/freebsd.md)
+	#$(call pandoc,freebsd,amd64,rdio-scanner.pdf,docs/platforms/freebsd.md)
 	$(call build,freebsd,freebsd,amd64,$(app))
 	$(call zip,freebsd,amd64,$(app))
 
@@ -72,22 +72,22 @@ linux-arm: webapp dist/$(app)-linux-arm-v$(ver).zip
 linux-arm64: webapp dist/$(app)-linux-arm64-v$(ver).zip
 
 dist/$(app)-linux-386-v$(ver).zip: $(server)
-	$(call pandoc,linux,386,rdio-scanner.pdf,docs/platforms/linux.md)
+	#$(call pandoc,linux,386,rdio-scanner.pdf,docs/platforms/linux.md)
 	$(call build,linux,linux,386,$(app))
 	$(call zip,linux,386,$(app))
 
 dist/$(app)-linux-amd64-v$(ver).zip: $(server)
-	$(call pandoc,linux,amd64,rdio-scanner.pdf,docs/platforms/linux.md)
+	#$(call pandoc,linux,amd64,rdio-scanner.pdf,docs/platforms/linux.md)
 	$(call build,linux,linux,amd64,$(app))
 	$(call zip,linux,amd64,$(app))
 
 dist/$(app)-linux-arm-v$(ver).zip: $(server)
-	$(call pandoc,linux,arm,rdio-scanner.pdf,docs/platforms/linux.md)
+	#$(call pandoc,linux,arm,rdio-scanner.pdf,docs/platforms/linux.md)
 	$(call build,linux,linux,arm,$(app))
 	$(call zip,linux,arm,$(app))
 
 dist/$(app)-linux-arm64-v$(ver).zip: $(server)
-	$(call pandoc,linux,arm64,rdio-scanner.pdf,docs/platforms/linux.md)
+	#$(call pandoc,linux,arm64,rdio-scanner.pdf,docs/platforms/linux.md)
 	$(call build,linux,linux,arm64,$(app))
 	$(call zip,linux,arm64,$(app))
 
@@ -96,12 +96,12 @@ macos-amd64: webapp dist/$(app)-macos-amd64-v$(ver).zip
 macos-arm64: webapp dist/$(app)-macos-arm64-v$(ver).zip
 
 dist/$(app)-macos-amd64-v$(ver).zip: $(server)
-	$(call pandoc,macos,amd64,rdio-scanner.pdf,docs/platforms/macos.md)
+	#$(call pandoc,macos,amd64,rdio-scanner.pdf,docs/platforms/macos.md)
 	$(call build,darwin,macos,amd64,$(app))
 	$(call zip,macos,amd64,$(app))
 
 dist/$(app)-macos-arm64-v$(ver).zip: $(server)
-	$(call pandoc,macos,arm64,rdio-scanner.pdf,docs/platforms/macos.md)
+	#$(call pandoc,macos,arm64,rdio-scanner.pdf,docs/platforms/macos.md)
 	$(call build,darwin,macos,arm64,$(app))
 	$(call zip,macos,arm64,$(app))
 
@@ -109,6 +109,6 @@ windows: windows-amd64
 windows-amd64: webapp dist/$(app)-windows-amd64-v$(ver).zip
 
 dist/$(app)-windows-amd64-v$(ver).zip: $(server)
-	$(call pandoc,windows,amd64,rdio-scanner.pdf,docs/platforms/windows.md)
+	#$(call pandoc,windows,amd64,rdio-scanner.pdf,docs/platforms/windows.md)
 	$(call build,windows,windows,amd64,$(app).exe)
 	$(call zip,windows,amd64,$(app))
