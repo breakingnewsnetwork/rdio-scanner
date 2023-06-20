@@ -11,7 +11,7 @@
   flex-wrap: wrap;
 
   .mat-form-field {
-    @for $i from 1 through 6 {
+    @for $i from 1 through 7 {
       &:nth-of-type(#{$i}) {
         order: #{$i};
       }
@@ -23,7 +23,7 @@
     flex: 100%;
     flex-direction: row;
     justify-content: flex-end;
-    order: 7;
+    order: 8;
   }
 }
 

@@ -324,6 +324,72 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 		}
 	}
 
+	switch v := searchOptions.Keyword.(type) {
+	case string:
+		a := []string{}
+		tgIds := []string{}
+		systemIds := []string{}
+		for _, systemMap := range client.SystemsMap {
+
+			switch sLabel := systemMap["label"].(type) {
+			case string:
+				if strings.Contains(strings.ToLower(sLabel), strings.ToLower(v)) {
+					switch sId := systemMap["id"].(type) {
+					case float64:
+					case uint:
+						systemIds = append(systemIds, fmt.Sprintf("%v", sId))
+					}
+				}
+			}
+
+			switch tgsMap := systemMap["talkgroups"].(type) {
+			case TalkgroupsMap:
+				for _, tgMap := range tgsMap {
+					tgAdded := false
+					switch tgLabel := tgMap["label"].(type) {
+					case string:
+						if strings.Contains(strings.ToLower(tgLabel), strings.ToLower(v)) {
+							switch tgId := tgMap["id"].(type) {
+							case float64:
+							case uint:
+								tgIds = append(tgIds, fmt.Sprintf("%v", tgId))
+								tgAdded = true
+							}
+						}
+					}
+
+					if !tgAdded {
+						switch tgLabel := tgMap["name"].(type) {
+						case string:
+							if strings.Contains(strings.ToLower(tgLabel), strings.ToLower(v)) {
+								switch tgId := tgMap["id"].(type) {
+								case float64:
+								case uint:
+									tgIds = append(tgIds, fmt.Sprintf("%v", tgId))
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		//fmt.Println(strings.Join(systemIds, ","))
+		//fmt.Println(strings.Join(tgIds, ","))
+
+		if len(systemIds) > 0 {
+			a = append(a, fmt.Sprintf("`system` in (%s)", strings.Join(systemIds, ",")))
+		}
+
+		if len(tgIds) > 0 {
+			a = append(a, fmt.Sprintf("`talkgroup` in (%s)", strings.Join(tgIds, ",")))
+		}
+
+		if len(a) > 0 {
+			where += fmt.Sprintf(" and (%s)", strings.Join(a, " or "))
+		}
+	}
+
 	query = fmt.Sprintf("select `dateTime` from `rdioScannerCalls` where %v order by `dateTime` asc", where)
 	if err = db.Sql.QueryRow(query).Scan(&dateTime); err != nil && err != sql.ErrNoRows {
 		return nil, formatError(fmt.Errorf("%v, %v", err, query))
@@ -491,6 +557,7 @@ type CallsSearchOptions struct {
 	System                  any `json:"system,omitempty"`
 	Tag                     any `json:"tag,omitempty"`
 	Talkgroup               any `json:"talkgroup,omitempty"`
+	Keyword                 any `json:"keyword,omitempty"`
 	searchPatchedTalkgroups bool
 }
 
@@ -535,6 +602,11 @@ func (searchOptions *CallsSearchOptions) fromMap(m map[string]any) error {
 	switch v := m["talkgroup"].(type) {
 	case float64:
 		searchOptions.Talkgroup = uint(v)
+	}
+
+	switch v := m["keyword"].(type) {
+	case string:
+		searchOptions.Keyword = v
 	}
 
 	return nil
