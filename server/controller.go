@@ -106,9 +106,10 @@ func (controller *Controller) IngestCall(call *Call) {
 		tagLabel   string
 		talkgroup  *Talkgroup
 	)
+	begin := time.Now()
 
 	logCall := func(call *Call, level string, message string) {
-		controller.Logs.LogEvent(level, fmt.Sprintf("newcall: system=%v talkgroup=%v file=%v %v", call.System, call.Talkgroup, call.AudioName, message))
+		controller.Logs.LogEvent(level, fmt.Sprintf("newcall: system=%v talkgroup=%v file=%v %v duration=%v", call.System, call.Talkgroup, call.AudioName, message, call.duration))
 	}
 
 	logError := func(err error) {
@@ -275,7 +276,7 @@ func (controller *Controller) IngestCall(call *Call) {
 
 	if !controller.Options.DisableDuplicateDetection {
 		if controller.Calls.CheckDuplicate(call, controller.Options.DuplicateDetectionTimeFrame, controller.Database) {
-			logCall(call, LogLevelWarn, "duplicate call rejected")
+			logCall(call, LogLevelInfo, "duplicate call rejected")
 			return
 		}
 	}
@@ -307,6 +308,8 @@ func (controller *Controller) IngestCall(call *Call) {
 		}
 
 		logCall(call, LogLevelInfo, "success")
+
+		log.Printf("Time to process incoming call %v | queue length %v\n", time.Since(begin).String(), len(controller.Ingest))
 
 		controller.EmitCall(call)
 
@@ -526,8 +529,10 @@ func (controller *Controller) Start() error {
 
 	go func() {
 		for {
+			begin := time.Now()
 			call := <-controller.Ingest
-			controller.IngestCall(call)
+			go controller.IngestCall(call)
+			log.Printf("Time in queue %v | queue length %v\n", time.Since(begin).String(), len(controller.Ingest))
 		}
 	}()
 

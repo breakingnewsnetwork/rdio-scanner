@@ -39,7 +39,7 @@
         <span>Duration</span>
       </mat-header-cell>
       <mat-cell *matCellDef="let row" [ngClass]="{'time12h': time12h}">
-        <span>{{ row?.duration || 0}}s</span>
+        <span>{{ row?.duration ? row?.duration + 's' : ''}}</span>
       </mat-cell>
     </ng-container>
     <ng-container matColumnDef="system">
@@ -157,11 +157,17 @@
         </mat-option>
       </mat-select>
     </mat-form-field>
-    <mat-form-field>
+    <mat-form-field style="margin-right: 20px">
       <mat-label>
         Keyword
       </mat-label>
       <input matInput #keywordInput placeholder="Enter Keyword" formControlName="keyword">
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>
+        Min. Duration
+      </mat-label>
+      <input matInput type="number" min="0" placeholder="Min. Duration" formControlName="duration" (change)="formChangeHandler()">
     </mat-form-field>
     <div class="reset">
       <button mat-raised-button type="button" [disabled]="resultsPending" (click)="resetForm()">

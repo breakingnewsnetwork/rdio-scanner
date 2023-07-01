@@ -67,7 +67,7 @@ func (logs *Logs) LogEvent(level string, message string) error {
 		log.Println(message)
 	}
 
-	if logs.database != nil {
+	if logs.database != nil && level != LogLevelInfo {
 		l := Log{
 			DateTime: time.Now().UTC(),
 			Level:    level,

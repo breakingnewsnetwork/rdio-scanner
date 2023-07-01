@@ -50,6 +50,7 @@ export class RdioScannerSearchComponent implements OnDestroy, OnInit {
     tag: [-1],
     talkgroup: [-1],
     keyword: [''],
+    duration: [0],
   });
 
   livefeedOnline = false;
@@ -226,7 +227,8 @@ export class RdioScannerSearchComponent implements OnDestroy, OnInit {
       system: -1,
       tag: -1,
       talkgroup: -1,
-      keyword: ''
+      keyword: '',
+      duration: 0
     });
 
     this.paginator?.firstPage();
@@ -289,6 +291,10 @@ export class RdioScannerSearchComponent implements OnDestroy, OnInit {
 
     if (this.form.value.keyword) {
       options.keyword = this.form.value.keyword;
+    }
+
+    if (this.form.value.duration) {
+      options.duration = this.form.value.duration;
     }
 
     this.resultsPending = true;

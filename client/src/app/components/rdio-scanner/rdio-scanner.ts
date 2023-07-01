@@ -169,6 +169,7 @@ export interface RdioScannerSearchOptions {
     tag?: string;
     talkgroup?: number;
     keyword?: string;
+    duration?: number;
 }
 
 export interface RdioScannerSystem {

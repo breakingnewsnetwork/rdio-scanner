@@ -324,6 +324,19 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 		}
 	}
 
+	switch v := searchOptions.Duration.(type) {
+	case float64, int32, uint:
+		a := []string{}
+
+		if v.(float64) > 0 {
+			a = append(a, fmt.Sprintf("`duration` >= %v", v))
+		}
+
+		if len(a) > 0 {
+			where += fmt.Sprintf(" and (%s)", strings.Join(a, " or "))
+		}
+	}
+
 	switch v := searchOptions.Keyword.(type) {
 	case string:
 		a := []string{}
@@ -335,8 +348,7 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 			case string:
 				if strings.Contains(strings.ToLower(sLabel), strings.ToLower(v)) {
 					switch sId := systemMap["id"].(type) {
-					case float64:
-					case uint:
+					case uint, float64:
 						systemIds = append(systemIds, fmt.Sprintf("%v", sId))
 					}
 				}
@@ -350,8 +362,7 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 					case string:
 						if strings.Contains(strings.ToLower(tgLabel), strings.ToLower(v)) {
 							switch tgId := tgMap["id"].(type) {
-							case float64:
-							case uint:
+							case uint, float64:
 								tgIds = append(tgIds, fmt.Sprintf("%v", tgId))
 								tgAdded = true
 							}
@@ -363,8 +374,7 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 						case string:
 							if strings.Contains(strings.ToLower(tgLabel), strings.ToLower(v)) {
 								switch tgId := tgMap["id"].(type) {
-								case float64:
-								case uint:
+								case uint, float64:
 									tgIds = append(tgIds, fmt.Sprintf("%v", tgId))
 								}
 							}
@@ -558,6 +568,7 @@ type CallsSearchOptions struct {
 	Tag                     any `json:"tag,omitempty"`
 	Talkgroup               any `json:"talkgroup,omitempty"`
 	Keyword                 any `json:"keyword,omitempty"`
+	Duration                any `json:"duration,omitempty"`
 	searchPatchedTalkgroups bool
 }
 
@@ -607,6 +618,11 @@ func (searchOptions *CallsSearchOptions) fromMap(m map[string]any) error {
 	switch v := m["keyword"].(type) {
 	case string:
 		searchOptions.Keyword = v
+	}
+
+	switch v := m["duration"].(type) {
+	case uint, int32, float64:
+		searchOptions.Duration = v
 	}
 
 	return nil

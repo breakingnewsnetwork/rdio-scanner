@@ -173,7 +173,7 @@ func (ffmpeg *FFMpeg) GetDuration(call *Call, systems *Systems, tags *Tags, mode
 		}
 
 		//call.duration = strconv.ParseFloat(durationStr, 32)
-		fmt.Println("filename", call.AudioName, "duration: ", call.duration)
+		//fmt.Println("filename", call.AudioName, "duration: ", call.duration)
 	} else {
 		fmt.Println(stderr.String())
 	}
