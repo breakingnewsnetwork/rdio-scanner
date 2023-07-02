@@ -69,6 +69,9 @@ func NewAdmin(controller *Controller) *Admin {
 
 func (admin *Admin) BroadcastConfig() {
 	if b, err := json.Marshal(admin.GetConfig()); err == nil {
+		admin.mutex.Lock()
+		defer admin.mutex.Unlock()
+
 		for conn := range admin.Conns {
 			conn.WriteMessage(websocket.TextMessage, b)
 		}
@@ -138,6 +141,9 @@ func (admin *Admin) ConfigHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			admin.Unregister <- conn
+
+			admin.mutex.Lock()
+			defer admin.mutex.Unlock()
 
 			conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(1000, ""))
 		}()
