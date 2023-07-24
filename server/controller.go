@@ -538,10 +538,10 @@ func (controller *Controller) Start() error {
 
 	go func() {
 		for {
-			begin := time.Now()
+			//begin := time.Now()
 			call := <-controller.Ingest
 			go controller.IngestCall(call)
-			log.Printf("Time in queue %v | queue length %v\n", time.Since(begin).String(), len(controller.Ingest))
+			//log.Printf("Time in queue %v | queue length %v\n", time.Since(begin).String(), len(controller.Ingest))
 		}
 	}()
 
