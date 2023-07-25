@@ -161,8 +161,8 @@ func (controller *Controller) IngestCall(call *Call) {
 			if group, ok = controller.Groups.GetGroup(groupLabel); !ok {
 				group = &Group{Label: groupLabel}
 
-				controller.Groups.mutex.Lock()
-				defer controller.Groups.mutex.Unlock()
+				//controller.Groups.mutex.Lock()
+				//defer controller.Groups.mutex.Unlock()
 
 				controller.Groups.List = append(controller.Groups.List, group)
 
@@ -193,8 +193,8 @@ func (controller *Controller) IngestCall(call *Call) {
 			if tag, ok = controller.Tags.GetTag(tagLabel); !ok {
 				tag = &Tag{Label: tagLabel}
 
-				controller.Tags.mutex.Lock()
-				defer controller.Tags.mutex.Unlock()
+				//controller.Tags.mutex.Lock()
+				//defer controller.Tags.mutex.Unlock()
 
 				controller.Tags.List = append(controller.Tags.List, tag)
 
@@ -229,8 +229,8 @@ func (controller *Controller) IngestCall(call *Call) {
 				TagId:   tagId,
 			}
 
-			system.Talkgroups.mutex.Lock()
-			defer system.Talkgroups.mutex.Unlock()
+			//system.Talkgroups.mutex.Lock()
+			//defer system.Talkgroups.mutex.Unlock()
 
 			system.Talkgroups.List = append(system.Talkgroups.List, talkgroup)
 		}
@@ -538,10 +538,8 @@ func (controller *Controller) Start() error {
 
 	go func() {
 		for {
-			//begin := time.Now()
 			call := <-controller.Ingest
 			go controller.IngestCall(call)
-			//log.Printf("Time in queue %v | queue length %v\n", time.Since(begin).String(), len(controller.Ingest))
 		}
 	}()
 
