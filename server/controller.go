@@ -87,6 +87,7 @@ func (controller *Controller) EmitCall(call *Call) {
 }
 
 func (controller *Controller) EmitConfig() {
+	log.Printf("Config was auto populated")
 	go controller.Clients.EmitConfig(controller.Groups, controller.Options, controller.Systems, controller.Tags, controller.Accesses.IsRestricted())
 	go controller.Admin.BroadcastConfig()
 }
@@ -161,9 +162,6 @@ func (controller *Controller) IngestCall(call *Call) {
 			if group, ok = controller.Groups.GetGroup(groupLabel); !ok {
 				group = &Group{Label: groupLabel}
 
-				//controller.Groups.mutex.Lock()
-				//defer controller.Groups.mutex.Unlock()
-
 				controller.Groups.List = append(controller.Groups.List, group)
 
 				if err = controller.Groups.Write(controller.Database); err != nil {
@@ -192,9 +190,6 @@ func (controller *Controller) IngestCall(call *Call) {
 
 			if tag, ok = controller.Tags.GetTag(tagLabel); !ok {
 				tag = &Tag{Label: tagLabel}
-
-				//controller.Tags.mutex.Lock()
-				//defer controller.Tags.mutex.Unlock()
 
 				controller.Tags.List = append(controller.Tags.List, tag)
 
@@ -228,9 +223,6 @@ func (controller *Controller) IngestCall(call *Call) {
 				Label:   fmt.Sprintf("%d", call.Talkgroup),
 				TagId:   tagId,
 			}
-
-			//system.Talkgroups.mutex.Lock()
-			//defer system.Talkgroups.mutex.Unlock()
 
 			system.Talkgroups.List = append(system.Talkgroups.List, talkgroup)
 		}
