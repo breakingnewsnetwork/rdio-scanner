@@ -1136,7 +1136,7 @@ export class RdioScannerService implements OnDestroy {
                 tgMap[tg.id] = (this.livefeedMap[sys.id] && this.livefeedMap[sys.id][tg.id])
                     ? this.livefeedMap[sys.id][tg.id]
                     : {
-                        active: !(group?.status === RdioScannerCategoryStatus.Off || tag?.status === RdioScannerCategoryStatus.Off),
+                        active: !(!group || group?.status === RdioScannerCategoryStatus.Off || tag?.status === RdioScannerCategoryStatus.Off),
                     } as RdioScannerLivefeed;
 
                 return tgMap;

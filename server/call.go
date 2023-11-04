@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"strconv"
 	"strings"
@@ -463,7 +464,7 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 
 	switch v := searchOptions.Limit.(type) {
 	case uint:
-		limit = uint(math.Min(float64(2000), float64(v)))
+		limit = uint(math.Min(float64(10000), float64(v)))
 	default:
 		limit = 200
 	}
@@ -479,6 +480,8 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 	}
 
 	query = fmt.Sprintf("select `id`, `DateTime`, `system`, `talkgroup`, `duration` from `rdioScannerCalls` where %v order by `dateTime` %v limit %v offset %v", where, order, limit, offset)
+	log.Println(query)
+
 	if rows, err = db.Sql.Query(query); err != nil && err != sql.ErrNoRows {
 		return nil, formatError(fmt.Errorf("%v, %v", err, query))
 	}
