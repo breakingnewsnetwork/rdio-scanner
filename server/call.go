@@ -420,7 +420,7 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 			a = append(a, fmt.Sprintf("`system` = %s and `talkgroup` = %s", systemTgArr[0], systemTgArr[1]))
 		}*/
 
-		where += fmt.Sprintf(" and `systgkey` in (%s)", strings.Join(searchOptions.SystemTalkgroups, ","))
+		where += fmt.Sprintf(" and `systgkey` in ('%s')", strings.Join(searchOptions.SystemTalkgroups, "', '"))
 	}
 
 	query = fmt.Sprintf("select `dateTime` from `rdioScannerCalls` where %v order by `dateTime` asc", where)
