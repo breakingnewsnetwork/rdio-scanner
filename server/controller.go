@@ -290,7 +290,7 @@ func (controller *Controller) IngestCall(call *Call) {
 		controller.Logs.LogEvent(LogLevelWarn, err.Error())
 	}
 
-	call.systgkey = system.Id + '-' + talkgroup.Id
+	call.systgkey = strconv.Itoa(int(system.Id)) + "-" + strconv.Itoa(int(talkgroup.Id))
 
 	if id, err = controller.Calls.WriteCall(call, controller.Database); err == nil {
 		call.Id = id
