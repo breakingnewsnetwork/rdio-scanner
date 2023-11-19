@@ -130,6 +130,9 @@ func (db *Database) migrate() error {
 	if err == nil {
 		err = db.migration20230618070000(verbose)
 	}
+	if err == nil {
+		err = db.migration20231119070000(verbose)
+	}
 
 	return err
 }
@@ -474,6 +477,23 @@ func (db *Database) migration20230618070000(verbose bool) error {
 		}
 	}
 	return db.migrateWithSchema("20230618070000-v6.6.4-alter-table", queries, verbose)
+}
+
+func (db *Database) migration20231119070000(verbose bool) error {
+	var queries []string
+	if db.Config.DbType == DbTypeSqlite {
+		queries = []string{
+			"alter table `rdioScannerCalls` add column `systgkey` varchar(250) null",
+			"create index `rdio_scanner_calls_date_time_system_talkgroup_1` on `rdioScannerCalls` (`dateTime`, `system`, `talkgroup`, `systgkey`)",
+		}
+	} else {
+		queries = []string{
+			"alter table `rdioScannerCalls` add column `systgkey` varchar(250) null",
+			"UPDATE `rdioScannerCalls` SET `systgkey` = CONCAT_WS('-',`system`,`talkgroup`)",
+			"create index `rdio_scanner_calls_date_time_system_talkgroup_1` on `rdioScannerCalls` (`dateTime`, `system`, `talkgroup`, `systgkey`)",
+		}
+	}
+	return db.migrateWithSchema("20231119070000-v6.6.4-alter-table", queries, verbose)
 }
 
 func (db *Database) prepareMigration() (bool, error) {
