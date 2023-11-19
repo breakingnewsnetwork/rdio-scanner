@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"strconv"
 	"strings"
@@ -420,10 +421,6 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 		}*/
 
 		where += fmt.Sprintf(" and `systgkey` in (%s)", strings.Join(searchOptions.SystemTalkgroups, ","))
-
-		/*if len(a) > 0 {
-			where += fmt.Sprintf(" and (%s)", strings.Join(a, " or "))
-		}*/
 	}
 
 	query = fmt.Sprintf("select `dateTime` from `rdioScannerCalls` where %v order by `dateTime` asc", where)
@@ -495,7 +492,7 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 	}
 
 	query = fmt.Sprintf("select `id`, `DateTime`, `system`, `talkgroup`, `duration` from `rdioScannerCalls` where %v order by `dateTime` %v limit %v offset %v", where, order, limit, offset)
-	// log.Println(query)
+	log.Println(query)
 
 	if rows, err = db.Sql.Query(query); err != nil && err != sql.ErrNoRows {
 		return nil, formatError(fmt.Errorf("%v, %v", err, query))
