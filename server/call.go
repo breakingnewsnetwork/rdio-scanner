@@ -410,6 +410,18 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 		where += fmt.Sprintf(" and `talkgroup` in (%s)", strings.Join(IDs, ","))
 	}
 
+	if searchOptions.SystemTalkgroups != nil && len(searchOptions.SystemTalkgroups) > 0 {
+		var a []string
+		for _, i := range searchOptions.SystemTalkgroups {
+			var systemTgArr = strings.Split(i, "-")
+			a = append(a, fmt.Sprintf("`system` = %s and `talkgroup` = %s", systemTgArr[0], systemTgArr[1]))
+		}
+
+		if len(a) > 0 {
+			where += fmt.Sprintf(" and (%s)", strings.Join(a, " or "))
+		}
+	}
+
 	query = fmt.Sprintf("select `dateTime` from `rdioScannerCalls` where %v order by `dateTime` asc", where)
 	if err = db.Sql.QueryRow(query).Scan(&dateTime); err != nil && err != sql.ErrNoRows {
 		return nil, formatError(fmt.Errorf("%v, %v", err, query))
@@ -571,17 +583,18 @@ func (calls *Calls) WriteCall(call *Call, db *Database) (uint, error) {
 }
 
 type CallsSearchOptions struct {
-	Date                    any   `json:"date,omitempty"`
-	Group                   any   `json:"group,omitempty"`
-	Limit                   any   `json:"limit,omitempty"`
-	Offset                  any   `json:"offset,omitempty"`
-	Sort                    any   `json:"sort,omitempty"`
-	System                  any   `json:"system,omitempty"`
-	Tag                     any   `json:"tag,omitempty"`
-	Talkgroup               any   `json:"talkgroup,omitempty"`
-	Keyword                 any   `json:"keyword,omitempty"`
-	Duration                any   `json:"duration,omitempty"`
-	Talkgroups              []int `json:"talkgroups,omitempty"`
+	Date                    any      `json:"date,omitempty"`
+	Group                   any      `json:"group,omitempty"`
+	Limit                   any      `json:"limit,omitempty"`
+	Offset                  any      `json:"offset,omitempty"`
+	Sort                    any      `json:"sort,omitempty"`
+	System                  any      `json:"system,omitempty"`
+	Tag                     any      `json:"tag,omitempty"`
+	Talkgroup               any      `json:"talkgroup,omitempty"`
+	Keyword                 any      `json:"keyword,omitempty"`
+	Duration                any      `json:"duration,omitempty"`
+	Talkgroups              []int    `json:"talkgroups,omitempty"`
+	SystemTalkgroups        []string `json:"systemtalkgroups,omitempty"`
 	searchPatchedTalkgroups bool
 }
 
@@ -648,6 +661,18 @@ func (searchOptions *CallsSearchOptions) fromMap(m map[string]any) error {
 			}
 		}
 		searchOptions.Talkgroups = outArr
+	}
+
+	switch v := m["systemtalkgroups"].(type) {
+	case []interface{}:
+		var outArr []string
+		for i := range v {
+			switch v1 := v[i].(type) {
+			case string:
+				outArr = append(outArr, v1)
+			}
+		}
+		searchOptions.SystemTalkgroups = outArr
 	}
 
 	return nil
