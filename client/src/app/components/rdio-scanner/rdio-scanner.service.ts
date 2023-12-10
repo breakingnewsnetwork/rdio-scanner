@@ -1130,13 +1130,14 @@ export class RdioScannerService implements OnDestroy {
     private rebuildLivefeedMap(): void {
         const lfm = this.config.systems.reduce((sysMap, sys) => {
             sysMap[sys.id] = sys.talkgroups.reduce((tgMap, tg) => {
-                const group = this.categories.find((cat) => cat.label === tg.group);
-                const tag = this.categories.find((cat) => cat.label === tg.tag);
+                //const group = this.categories.find((cat) => cat.label === tg.group);
+                //const tag = this.categories.find((cat) => cat.label === tg.tag);
 
                 tgMap[tg.id] = (this.livefeedMap[sys.id] && this.livefeedMap[sys.id][tg.id])
                     ? this.livefeedMap[sys.id][tg.id]
                     : {
-                        active: !(!group || group?.status === RdioScannerCategoryStatus.Off || tag?.status === RdioScannerCategoryStatus.Off),
+                        //active: !(!group || group?.status === RdioScannerCategoryStatus.Off || tag?.status === RdioScannerCategoryStatus.Off),
+                        active: false,
                     } as RdioScannerLivefeed;
 
                 return tgMap;
