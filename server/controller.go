@@ -258,7 +258,7 @@ func (controller *Controller) IngestCall(call *Call) {
 
 	if populated {
 		start := time.Now()
-		controller.Logs.LogEvent(LogLevelInfo, "start new system populate")
+		controller.Logs.LogEvent(LogLevelInfo, "start new system populate "+system.Label+" talkgroup "+talkgroup.Label)
 		if err = controller.Systems.Write(controller.Database); err != nil {
 			logError(err)
 			return

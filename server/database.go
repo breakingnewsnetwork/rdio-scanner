@@ -136,6 +136,9 @@ func (db *Database) migrate() error {
 	if err == nil {
 		err = db.migration20231210070000(verbose)
 	}
+	/*if err == nil {
+		err = db.migration20231231070000(verbose)
+	}*/
 
 	return err
 }
@@ -500,6 +503,20 @@ func (db *Database) migration20231119070000(verbose bool) error {
 }
 
 func (db *Database) migration20231210070000(verbose bool) error {
+	var queries []string
+	if db.Config.DbType == DbTypeSqlite {
+		queries = []string{
+			"create index `rdio_scanner_calls_date_time` on `rdioScannerCalls` (`dateTime`)",
+		}
+	} else {
+		queries = []string{
+			"create index `rdio_scanner_calls_date_time` on `rdioScannerCalls` (`dateTime`)",
+		}
+	}
+	return db.migrateWithSchema("migration20231210070000-v6.6.4-create-table-index", queries, verbose)
+}
+
+func (db *Database) migration20231231070000(verbose bool) error {
 	var queries []string
 	if db.Config.DbType == DbTypeSqlite {
 		queries = []string{

@@ -167,7 +167,7 @@ func (units *Units) Write(db *Database, systemId uint) error {
 	defer units.mutex.Unlock()
 
 	formatError := func(err error) error {
-		return fmt.Errorf("units.write: %v", err)
+		return fmt.Errorf("units.write: %+v", err)
 	}
 
 	if rows, err = db.Sql.Query("select `id` from `rdioScannerUnits` where `systemId` = ?", systemId); err != nil {

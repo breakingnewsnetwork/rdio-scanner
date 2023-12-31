@@ -210,8 +210,8 @@ func (tags *Tags) Write(db *Database) error {
 		err         error
 		rows        *sql.Rows
 		rowIds      = []uint{}
-		matchedTags = make(map[uint]bool)
-		updatedTags = make(map[uint]bool)
+		matchedTags = make(map[any]bool)
+		updatedTags = make(map[any]bool)
 	)
 
 	tags.mutex.Lock()
@@ -267,11 +267,11 @@ func (tags *Tags) Write(db *Database) error {
 	}
 
 	for _, tag := range tags.List {
-		if _, ok := matchedTags[tag.Id.(uint)]; ok {
+		if _, ok := matchedTags[tag.Id]; ok {
 			continue
 		}
 
-		if _, ok := updatedTags[tag.Id.(uint)]; ok {
+		if _, ok := updatedTags[tag.Id]; ok {
 			if _, err = db.Sql.Exec("update `rdioScannerTags` set `_id` = ?, `label` = ? where `_id` = ?", tag.Id, tag.Label, tag.Id); err != nil {
 				break
 			}

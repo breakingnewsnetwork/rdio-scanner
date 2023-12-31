@@ -202,15 +202,15 @@ func (talkgroups *Talkgroups) Write(db *Database, systemId uint) error {
 		err                 error
 		removedTalkgroupIds = []uint{}
 		rows                *sql.Rows
-		matchedTg           = make(map[uint]bool)
-		updatedTg           = make(map[uint]bool)
+		matchedTg           = make(map[any]bool)
+		updatedTg           = make(map[any]bool)
 	)
 
 	talkgroups.mutex.Lock()
 	defer talkgroups.mutex.Unlock()
 
 	formatError := func(err error) error {
-		return fmt.Errorf("talkgroups.write: %v", err)
+		return fmt.Errorf("talkgroups.write: %+v", err)
 	}
 
 	tgMap := make(map[any]*Talkgroup)

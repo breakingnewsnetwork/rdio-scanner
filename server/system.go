@@ -411,7 +411,7 @@ func (systems *Systems) Write(db *Database) error {
 	defer systems.mutex.Unlock()
 
 	formatError := func(err error) error {
-		return fmt.Errorf("systems.write: %v", err)
+		return fmt.Errorf("systems.write: %+v", err)
 	}
 
 	systemsMap := make(map[any]*System)

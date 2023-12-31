@@ -214,15 +214,15 @@ func (groups *Groups) Write(db *Database) error {
 		err           error
 		rows          *sql.Rows
 		rowIds        = []uint{}
-		matchedGroups = make(map[uint]bool)
-		updatedGroups = make(map[uint]bool)
+		matchedGroups = make(map[any]bool)
+		updatedGroups = make(map[any]bool)
 	)
 
 	groups.mutex.Lock()
 	defer groups.mutex.Unlock()
 
 	formatError := func(err error) error {
-		return fmt.Errorf("groups.write %v", err)
+		return fmt.Errorf("groups.write %+v", err)
 	}
 
 	groupsMap := make(map[any]*Group)
@@ -271,11 +271,11 @@ func (groups *Groups) Write(db *Database) error {
 	}
 
 	for _, group := range groups.List {
-		if _, ok := matchedGroups[group.Id.(uint)]; ok {
+		if _, ok := matchedGroups[group.Id]; ok {
 			continue
 		}
 
-		if _, ok := updatedGroups[group.Id.(uint)]; ok {
+		if _, ok := updatedGroups[group.Id]; ok {
 			if _, err = db.Sql.Exec("update `rdioScannerGroups` set `_id` = ?, `label` = ? where `_id` = ?", group.Id, group.Label, group.Id); err != nil {
 				break
 			}
