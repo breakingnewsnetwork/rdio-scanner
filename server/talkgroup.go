@@ -199,10 +199,11 @@ func (talkgroups *Talkgroups) Read(db *Database, systemId uint) error {
 
 func (talkgroups *Talkgroups) Write(db *Database, systemId uint) error {
 	var (
-		count uint
-		err   error
-		ids   = []uint{}
-		rows  *sql.Rows
+		err                 error
+		removedTalkgroupIds = []uint{}
+		rows                *sql.Rows
+		matchedTg           = make(map[uint]bool)
+		updatedTg           = make(map[uint]bool)
 	)
 
 	talkgroups.mutex.Lock()
@@ -212,24 +213,45 @@ func (talkgroups *Talkgroups) Write(db *Database, systemId uint) error {
 		return fmt.Errorf("talkgroups.write: %v", err)
 	}
 
-	if rows, err = db.Sql.Query("select `id` from `rdioScannerTalkgroups` where `systemId` = ?", systemId); err != nil {
+	tgMap := make(map[any]*Talkgroup)
+	for _, tg := range talkgroups.List {
+		tgMap[tg.Id] = tg
+	}
+
+	if rows, err = db.Sql.Query("select `id`, `frequency`, `groupId`, `label`, `led`, `name`, `order`, `tagId`  from `rdioScannerTalkgroups` where `systemId` = ?", systemId); err != nil {
 		return formatError(err)
 	}
 
 	for rows.Next() {
-		var id uint
-		if err = rows.Scan(&id); err != nil {
+		var (
+			rowId        uint
+			rowFrequency any
+			rowGroupId   uint
+			rowLabel     any
+			rowLed       any
+			rowName      any
+			rowOrder     uint
+			rowTagId     uint
+		)
+		if err = rows.Scan(&rowId, &rowFrequency, &rowGroupId, &rowLabel, &rowLed, &rowName, &rowOrder, &rowTagId); err != nil {
 			break
 		}
-		remove := true
-		for _, talkgroup := range talkgroups.List {
-			if talkgroup.Id == id {
-				remove = false
-				break
+
+		if tg, ok := tgMap[rowId]; ok {
+			if tg.Id == rowId &&
+				tg.Frequency == rowFrequency &&
+				tg.GroupId == rowGroupId &&
+				tg.Label == rowLabel &&
+				tg.Led == rowLed &&
+				tg.Name == rowName &&
+				tg.Order == rowOrder &&
+				tg.TagId == rowTagId {
+				matchedTg[rowId] = true
+			} else {
+				updatedTg[rowId] = true //system was updated
 			}
-		}
-		if remove {
-			ids = append(ids, id)
+		} else { //not found
+			removedTalkgroupIds = append(removedTalkgroupIds, rowId)
 		}
 	}
 
@@ -239,8 +261,8 @@ func (talkgroups *Talkgroups) Write(db *Database, systemId uint) error {
 		return formatError(err)
 	}
 
-	if len(ids) > 0 {
-		if b, err := json.Marshal(ids); err == nil {
+	if len(removedTalkgroupIds) > 0 {
+		if b, err := json.Marshal(removedTalkgroupIds); err == nil {
 			s := string(b)
 			s = strings.ReplaceAll(s, "[", "(")
 			s = strings.ReplaceAll(s, "]", ")")
@@ -252,17 +274,18 @@ func (talkgroups *Talkgroups) Write(db *Database, systemId uint) error {
 	}
 
 	for _, talkgroup := range talkgroups.List {
-		if err = db.Sql.QueryRow("select count(*) from `rdioScannerTalkgroups` where `id` = ? and `systemId` = ?", talkgroup.Id, systemId).Scan(&count); err != nil {
-			break
+		if _, ok := matchedTg[talkgroup.Id]; ok {
+			continue
 		}
 
-		if count == 0 {
+		if _, ok := updatedTg[talkgroup.Id]; ok {
+			if _, err = db.Sql.Exec("update `rdioScannerTalkgroups` set `frequency` = ?, `groupId` = ?, `label` = ?, `led` = ?, `name` = ?, `order` = ?, `tagId` = ? where `id` = ? and `systemId` = ?", talkgroup.Frequency, talkgroup.GroupId, talkgroup.Label, talkgroup.Led, talkgroup.Name, talkgroup.Order, talkgroup.TagId, talkgroup.Id, systemId); err != nil {
+				break
+			}
+		} else {
 			if _, err = db.Sql.Exec("insert into `rdioScannerTalkgroups` (`frequency`, `groupId`, `id`, `label`, `led`, `name`, `order`, `systemId`, `tagId`) values (?, ?, ?, ?, ?, ?, ?, ?, ?)", talkgroup.Frequency, talkgroup.GroupId, talkgroup.Id, talkgroup.Label, talkgroup.Led, talkgroup.Name, talkgroup.Order, systemId, talkgroup.TagId); err != nil {
 				break
 			}
-
-		} else if _, err = db.Sql.Exec("update `rdioScannerTalkgroups` set `frequency` = ?, `groupId` = ?, `label` = ?, `led` = ?, `name` = ?, `order` = ?, `tagId` = ? where `id` = ? and `systemId` = ?", talkgroup.Frequency, talkgroup.GroupId, talkgroup.Label, talkgroup.Led, talkgroup.Name, talkgroup.Order, talkgroup.TagId, talkgroup.Id, systemId); err != nil {
-			break
 		}
 	}
 

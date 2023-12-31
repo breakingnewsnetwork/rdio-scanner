@@ -116,6 +116,7 @@ func (admin *Admin) ChangePassword(currentPassword any, newPassword string) erro
 }
 
 func (admin *Admin) ConfigHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	if strings.EqualFold(r.Header.Get("upgrade"), "websocket") {
 		upgrader := websocket.Upgrader{}
 
@@ -288,7 +289,8 @@ func (admin *Admin) ConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 			admin.SendConfig(w)
 
-			admin.Controller.Logs.LogEvent(LogLevelWarn, "configuration changed")
+			duration := time.Since(start)
+			admin.Controller.Logs.LogEvent(LogLevelWarn, "configuration changed and took: "+duration.String())
 
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)

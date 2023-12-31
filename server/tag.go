@@ -207,10 +207,11 @@ func (tags *Tags) Read(db *Database) error {
 
 func (tags *Tags) Write(db *Database) error {
 	var (
-		count  uint
-		err    error
-		rows   *sql.Rows
-		rowIds = []uint{}
+		err         error
+		rows        *sql.Rows
+		rowIds      = []uint{}
+		matchedTags = make(map[uint]bool)
+		updatedTags = make(map[uint]bool)
 	)
 
 	tags.mutex.Lock()
@@ -220,24 +221,30 @@ func (tags *Tags) Write(db *Database) error {
 		return fmt.Errorf("tags write %v", err)
 	}
 
-	if rows, err = db.Sql.Query("select `_id` from `rdioScannerTags`"); err != nil {
+	tagsMap := make(map[any]*Tag)
+	for _, tag := range tags.List {
+		tagsMap[tag.Id] = tag
+	}
+
+	if rows, err = db.Sql.Query("select `_id`, `label` from `rdioScannerTags`"); err != nil {
 		return formatError(err)
 	}
 
 	for rows.Next() {
 		var rowId uint
-		if err = rows.Scan(&rowId); err != nil {
+		var rowLabel string
+		if err = rows.Scan(&rowId, &rowLabel); err != nil {
 			break
 		}
-		remove := true
-		for _, tag := range tags.List {
-			if tag.Id == nil || tag.Id == rowId {
-				remove = false
-				break
+
+		if tag, ok := tagsMap[rowId]; ok {
+			if tag.Id == rowId && tag.Label == rowLabel {
+				matchedTags[rowId] = true
+			} else {
+				updatedTags[rowId] = true //tag was updated
 			}
-		}
-		if remove {
-			rowIds = append(rowIds, rowId)
+		} else { //not found
+			rowIds = append(rowIds, rowId) //tag was deleted
 		}
 	}
 
@@ -260,16 +267,18 @@ func (tags *Tags) Write(db *Database) error {
 	}
 
 	for _, tag := range tags.List {
-		if err = db.Sql.QueryRow("select count(*) from `rdioScannerTags` where `_id` = ?", tag.Id).Scan(&count); err != nil {
-			break
+		if _, ok := matchedTags[tag.Id.(uint)]; ok {
+			continue
 		}
 
-		if count == 0 {
+		if _, ok := updatedTags[tag.Id.(uint)]; ok {
+			if _, err = db.Sql.Exec("update `rdioScannerTags` set `_id` = ?, `label` = ? where `_id` = ?", tag.Id, tag.Label, tag.Id); err != nil {
+				break
+			}
+		} else {
 			if _, err = db.Sql.Exec("insert into `rdioScannerTags` (`_id`, `label`) values (?, ?)", tag.Id, tag.Label); err != nil {
 				break
 			}
-		} else if _, err = db.Sql.Exec("update `rdioScannerTags` set `_id` = ?, `label` = ? where `_id` = ?", tag.Id, tag.Label, tag.Id); err != nil {
-			break
 		}
 	}
 

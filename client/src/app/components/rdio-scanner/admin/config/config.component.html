@@ -1,90 +1,93 @@
 <form *ngIf="form" autocomplete="off" [formGroup]="form" (ngSubmit)="save()">
-    <mat-accordion displayMode="flat">
-        <mat-expansion-panel (afterCollapse)="accessComponent.closeAll()">
-            <mat-expansion-panel-header>
-                <mat-panel-title>
-                    <mat-icon>manage_accounts</mat-icon>
-                    Access
-                    <mat-icon *ngIf="form?.get('access')?.invalid" color="warn">error</mat-icon>
-                </mat-panel-title>
-            </mat-expansion-panel-header>
-            <rdio-scanner-admin-access #accessComponent [form]="access"></rdio-scanner-admin-access>
-        </mat-expansion-panel>
-        <mat-expansion-panel (afterCollapse)="apiKeyComponent.closeAll()">
-            <mat-expansion-panel-header>
-                <mat-panel-title>
-                    <mat-icon>vpn_key</mat-icon>
-                    ApiKey
-                    <mat-icon *ngIf="form?.get('apiKey')?.invalid" color="warn">error</mat-icon>
-                </mat-panel-title>
-            </mat-expansion-panel-header>
-            <rdio-scanner-admin-api-keys #apiKeyComponent [form]="apiKeys"></rdio-scanner-admin-api-keys>
-        </mat-expansion-panel>
-        <mat-expansion-panel *ngIf="!docker" (afterCollapse)="dirWatchComponent.closeAll()">
-            <mat-expansion-panel-header>
-                <mat-panel-title>
-                    <mat-icon>folder</mat-icon>
-                    Dirwatch
-                    <mat-icon *ngIf="form?.get('dirWatch')?.invalid" color="warn">error</mat-icon>
-                </mat-panel-title>
-            </mat-expansion-panel-header>
-            <rdio-scanner-admin-dir-watch #dirWatchComponent [form]="dirWatch"></rdio-scanner-admin-dir-watch>
-        </mat-expansion-panel>
-        <mat-expansion-panel (afterCollapse)="downstreamsComponent.closeAll()">
-            <mat-expansion-panel-header>
-                <mat-panel-title>
-                    <mat-icon>share</mat-icon>
-                    Downstreams
-                    <mat-icon *ngIf="form?.get('downstreams')?.invalid" color="warn">error</mat-icon>
-                </mat-panel-title>
-            </mat-expansion-panel-header>
-            <rdio-scanner-admin-downstreams #downstreamsComponent [form]="downstreams"></rdio-scanner-admin-downstreams>
-        </mat-expansion-panel>
-        <mat-expansion-panel>
-            <mat-expansion-panel-header>
-                <mat-panel-title>
-                    <mat-icon>workspaces</mat-icon>
-                    Groups
-                    <mat-icon *ngIf="form?.get('groups')?.invalid" color="warn">error</mat-icon>
-                </mat-panel-title>
-            </mat-expansion-panel-header>
-            <rdio-scanner-admin-groups [form]="groups"></rdio-scanner-admin-groups>
-        </mat-expansion-panel>
-        <mat-expansion-panel>
-            <mat-expansion-panel-header>
-                <mat-panel-title>
-                    <mat-icon>tune</mat-icon>
-                    Options
-                    <mat-icon *ngIf="form?.get('options')?.invalid" color="warn">error</mat-icon>
-                </mat-panel-title>
-            </mat-expansion-panel-header>
-            <rdio-scanner-admin-options [form]="options"></rdio-scanner-admin-options>
-        </mat-expansion-panel>
-        <mat-expansion-panel (afterCollapse)="systemsComponent.closeAll()">
-            <mat-expansion-panel-header>
-                <mat-panel-title>
-                    <mat-icon>podcasts</mat-icon>
-                    Systems
-                    <mat-icon *ngIf="form?.get('systems')?.invalid" color="warn">error</mat-icon>
-                </mat-panel-title>
-            </mat-expansion-panel-header>
-            <rdio-scanner-admin-systems #systemsComponent [form]="systems"></rdio-scanner-admin-systems>
-        </mat-expansion-panel>
-        <mat-expansion-panel>
-            <mat-expansion-panel-header>
-                <mat-panel-title>
-                    <mat-icon>sell</mat-icon>
-                    Tags
-                    <mat-icon *ngIf="form?.get('tags')?.invalid" color="warn">error</mat-icon>
-                </mat-panel-title>
-            </mat-expansion-panel-header>
-            <rdio-scanner-admin-tags [form]="tags"></rdio-scanner-admin-tags>
-        </mat-expansion-panel>
-    </mat-accordion>
-    <div class="row bottom">
-        <button type="button" mat-raised-button [disabled]="form.disabled || form.pristine"
-            (click)="reset()">Reset</button>
-        <button type="submit" mat-raised-button color="primary"
-            [disabled]="form.disabled || form.pristine || !form.valid">Save</button>
-    </div>
+  <mat-accordion displayMode="flat">
+    <mat-expansion-panel #admin_access_panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>manage_accounts</mat-icon>
+          Access
+          <mat-icon *ngIf="form?.get('access')?.invalid" color="warn">error</mat-icon>
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <rdio-scanner-admin-access *ngIf="admin_access_panel.expanded" [form]="access"></rdio-scanner-admin-access>
+    </mat-expansion-panel>
+    <mat-expansion-panel #admin_api_keys_panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>vpn_key</mat-icon>
+          ApiKey
+          <mat-icon *ngIf="form?.get('apiKey')?.invalid" color="warn">error</mat-icon>
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <rdio-scanner-admin-api-keys *ngIf="admin_api_keys_panel.expanded"
+                                   [form]="apiKeys"></rdio-scanner-admin-api-keys>
+    </mat-expansion-panel>
+    <mat-expansion-panel *ngIf="!docker" #dirwatch_panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>folder</mat-icon>
+          Dirwatch
+          <mat-icon *ngIf="form?.get('dirWatch')?.invalid" color="warn">error</mat-icon>
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <rdio-scanner-admin-dir-watch *ngIf="dirwatch_panel.expanded" [form]="dirWatch"></rdio-scanner-admin-dir-watch>
+    </mat-expansion-panel>
+    <mat-expansion-panel #admin_downstreams_panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>share</mat-icon>
+          Downstreams
+          <mat-icon *ngIf="form?.get('downstreams')?.invalid" color="warn">error</mat-icon>
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <rdio-scanner-admin-downstreams *ngIf="admin_downstreams_panel.expanded" [form]="downstreams"></rdio-scanner-admin-downstreams>
+    </mat-expansion-panel>
+    <mat-expansion-panel #groups_panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>workspaces</mat-icon>
+          Groups
+          <mat-icon *ngIf="form?.get('groups')?.invalid" color="warn">error</mat-icon>
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <rdio-scanner-admin-groups *ngIf="groups_panel.expanded" [form]="groups"></rdio-scanner-admin-groups>
+    </mat-expansion-panel>
+    <mat-expansion-panel #options_panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>tune</mat-icon>
+          Options
+          <mat-icon *ngIf="form?.get('options')?.invalid" color="warn">error</mat-icon>
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <rdio-scanner-admin-options *ngIf="options_panel.expanded" [form]="options"></rdio-scanner-admin-options>
+    </mat-expansion-panel>
+    <mat-expansion-panel #systems_panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>podcasts</mat-icon>
+          Systems
+          <mat-icon *ngIf="form?.get('systems')?.invalid" color="warn">error</mat-icon>
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <rdio-scanner-admin-systems *ngIf="systems_panel.expanded" [form]="systems"></rdio-scanner-admin-systems>
+    </mat-expansion-panel>
+    <mat-expansion-panel #tags_panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>sell</mat-icon>
+          Tags
+          <mat-icon *ngIf="form?.get('tags')?.invalid" color="warn">error</mat-icon>
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <rdio-scanner-admin-tags *ngIf="tags_panel.expanded" [form]="tags"></rdio-scanner-admin-tags>
+    </mat-expansion-panel>
+  </mat-accordion>
+  <div class="row bottom">
+    <button type="button" mat-raised-button [disabled]="form.disabled || form.pristine"
+            (click)="reset()">Reset
+    </button>
+    <button type="submit" mat-raised-button color="primary"
+            [disabled]="form.disabled || form.pristine || !form.valid">Save
+    </button>
+  </div>
 </form>

@@ -4,7 +4,7 @@
 </div>
 <mat-accordion displayMode="flat" cdkDropList [cdkDropListAutoScrollStep]=64 [cdkDropListData]="dirWatches"
     (cdkDropListDropped)="drop($event)">
-    <mat-expansion-panel *ngFor="let dirWatch of dirWatches; index as i" cdkDrag>
+    <mat-expansion-panel #panel *ngFor="let dirWatch of dirWatches; index as i" cdkDrag>
         <mat-expansion-panel-header>
             <mat-panel-title>
                 <mat-icon cdkDragHandle>drag_indicator</mat-icon>
@@ -12,7 +12,7 @@
                 <mat-icon *ngIf="dirWatch.invalid" color="warn">error</mat-icon>
             </mat-panel-title>
         </mat-expansion-panel-header>
-        <ng-container [formGroup]="dirWatch">
+        <ng-container *ngIf="panel.expanded" [formGroup]="dirWatch">
             <div class="row">
                 <p>
                     <span class="mat-body">Disabled</span><br>

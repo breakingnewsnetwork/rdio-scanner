@@ -510,7 +510,7 @@ func (db *Database) migration20231210070000(verbose bool) error {
 			"create index `rdio_scanner_calls_date_time` on `rdioScannerCalls` (`dateTime`)",
 		}
 	}
-	return db.migrateWithSchema("20231119070000-v6.6.4-alter-table", queries, verbose)
+	return db.migrateWithSchema("migration20231210070000-v6.6.4-create-table-index", queries, verbose)
 }
 
 func (db *Database) prepareMigration() (bool, error) {

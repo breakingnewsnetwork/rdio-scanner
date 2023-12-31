@@ -5,8 +5,7 @@
     <button type="button" mat-button color="accent" (click)="add()">New system</button>
 </div>
 <mat-accordion displayMode="flat" cdkDropList [cdkDropListAutoScrollStep]=64 [cdkDropListData]="systems" (cdkDropListDropped)="drop($event)">
-    <mat-expansion-panel *ngFor="let system of systems; index as i" [formGroup]="system"
-        (afterCollapse)="systemComponent.closeAll()" cdkDrag>
+    <mat-expansion-panel #panel *ngFor="let system of systems; index as i" [formGroup]="system" cdkDrag>
         <mat-expansion-panel-header>
             <mat-panel-title>
                 <mat-icon cdkDragHandle>drag_indicator</mat-icon>
@@ -14,7 +13,7 @@
                 <mat-icon *ngIf="system.invalid" color="warn">error</mat-icon>
             </mat-panel-title>
         </mat-expansion-panel-header>
-        <rdio-scanner-admin-system #systemComponent [form]="system" (add)="add()" (remove)="remove(i)">
+        <rdio-scanner-admin-system *ngIf="panel.expanded" [form]="system" (add)="add()" (remove)="remove(i)">
         </rdio-scanner-admin-system>
     </mat-expansion-panel>
 </mat-accordion>

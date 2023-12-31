@@ -398,11 +398,13 @@ func (systems *Systems) Read(db *Database) error {
 func (systems *Systems) Write(db *Database) error {
 	var (
 		blacklists string
-		count      uint
-		err        error
-		rows       *sql.Rows
-		rowIds     = []uint{}
-		systemIds  = []uint{}
+		//count          uint
+		err            error
+		rows           *sql.Rows
+		rowIds         = []uint{}
+		systemIds      = []uint{}
+		matchedSystems = make(map[uint]bool)
+		updatedSystems = make(map[uint]bool)
 	)
 
 	systems.mutex.Lock()
@@ -412,26 +414,59 @@ func (systems *Systems) Write(db *Database) error {
 		return fmt.Errorf("systems.write: %v", err)
 	}
 
-	if rows, err = db.Sql.Query("select `_id`, `id` from `rdioScannerSystems`"); err != nil {
+	systemsMap := make(map[any]*System)
+	for _, system := range systems.List {
+		systemsMap[system.RowId] = system
+	}
+
+	if rows, err = db.Sql.Query("select `_id`, `id`, `autoPopulate`, `blacklists`, `label`, `led`, `order` from `rdioScannerSystems`"); err != nil {
 		return formatError(err)
 	}
 
 	for rows.Next() {
+		var rawLed sql.NullString
+		var rawOrder sql.NullFloat64
 		var rowId uint
-		var systemId uint
-		if err = rows.Scan(&rowId, &systemId); err != nil {
+		var rowSystemId uint
+		var rowAutoPopulate bool
+		var rowBlacklists sql.NullString
+		var rowBlackList Blacklists
+		var rowLabel string
+		var rowLed any
+		var rowOrder uint
+		if err = rows.Scan(&rowId, &rowSystemId, &rowAutoPopulate, &rowBlacklists, &rowLabel, &rawLed, &rawOrder); err != nil {
 			break
 		}
-		remove := true
-		for _, system := range systems.List {
-			if system.RowId == nil || (system.RowId == rowId && system.Id == systemId) {
-				remove = false
-				break
-			}
+
+		if rowBlacklists.Valid && len(rowBlacklists.String) > 0 {
+			rowBlacklists.String = strings.ReplaceAll(rowBlacklists.String, "[", "")
+			rowBlacklists.String = strings.ReplaceAll(rowBlacklists.String, "]", "")
+			rowBlackList = Blacklists(rowBlacklists.String)
 		}
-		if remove {
-			rowIds = append(rowIds, rowId)
-			systemIds = append(systemIds, systemId)
+
+		if rawLed.Valid && len(rawLed.String) > 0 {
+			rowLed = rawLed.String
+		}
+
+		if rawOrder.Valid && rawOrder.Float64 > 0 {
+			rowOrder = uint(rawOrder.Float64)
+		}
+
+		if system, ok := systemsMap[rowId]; ok {
+			if system.RowId == rowId &&
+				system.Id == rowSystemId &&
+				system.AutoPopulate == rowAutoPopulate &&
+				system.Blacklists.String() == rowBlackList.String() &&
+				system.Label == rowLabel &&
+				system.Led == rowLed &&
+				system.Order == rowOrder {
+				matchedSystems[rowId] = true
+			} else {
+				updatedSystems[rowId] = true //system was updated
+			}
+		} else { //not found
+			rowIds = append(rowIds, rowId) //system was deleted
+			systemIds = append(systemIds, rowSystemId)
 		}
 	}
 
@@ -470,23 +505,32 @@ func (systems *Systems) Write(db *Database) error {
 	}
 
 	for _, system := range systems.List {
+		if _, ok := matchedSystems[system.RowId.(uint)]; ok {
+			if err = system.Talkgroups.Write(db, system.Id); err != nil {
+				return err
+			}
+
+			if err = system.Units.Write(db, system.Id); err != nil {
+				return err
+			}
+
+			continue
+		}
+
 		if len(system.Blacklists) > 0 {
 			blacklists = strings.Join([]string{"[", system.Blacklists.String(), "]"}, "")
 		} else {
 			blacklists = "[]"
 		}
 
-		if err = db.Sql.QueryRow("select count(*) from `rdioScannerSystems` where `_id` = ?", system.RowId).Scan(&count); err != nil {
-			break
-		}
-
-		if count == 0 {
+		if _, ok := updatedSystems[system.RowId.(uint)]; ok {
+			if _, err = db.Sql.Exec("update `rdioScannerSystems` set `_id` = ?, `autoPopulate` = ?, `blacklists` = ?, `id` = ?, `label` = ?, `led` = ?, `order` = ? where `_id` = ?", system.RowId, system.AutoPopulate, blacklists, system.Id, system.Label, system.Led, system.Order, system.RowId); err != nil {
+				break
+			}
+		} else {
 			if _, err = db.Sql.Exec("insert into `rdioScannerSystems` (`_id`, `autoPopulate`, `blacklists`, `id`, `label`, `led`, `order`) values (?, ?, ?, ?, ?, ?, ?)", system.RowId, system.AutoPopulate, blacklists, system.Id, system.Label, system.Led, system.Order); err != nil {
 				break
 			}
-
-		} else if _, err = db.Sql.Exec("update `rdioScannerSystems` set `_id` = ?, `autoPopulate` = ?, `blacklists` = ?, `id` = ?, `label` = ?, `led` = ?, `order` = ? where `_id` = ?", system.RowId, system.AutoPopulate, blacklists, system.Id, system.Label, system.Led, system.Order, system.RowId); err != nil {
-			break
 		}
 
 		if err = system.Talkgroups.Write(db, system.Id); err != nil {

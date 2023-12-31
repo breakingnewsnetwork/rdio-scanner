@@ -81,7 +81,7 @@
                 </div>
                 <mat-accordion displayMode="flat" cdkDropList [cdkDropListAutoScrollStep]=64 [cdkDropListData]="talkgroups"
                     (cdkDropListDropped)="drop($event)">
-                    <mat-expansion-panel *ngFor="let talkgroup of talkgroups; index as i" [formGroup]="talkgroup"
+                    <mat-expansion-panel #tg_panel *ngFor="let talkgroup of talkgroups; index as i" [formGroup]="talkgroup"
                         cdkDrag>
                         <mat-expansion-panel-header>
                             <mat-panel-title>
@@ -91,7 +91,7 @@
                             </mat-panel-title>
                         </mat-expansion-panel-header>
                         <ng-template matExpansionPanelContent>
-                            <rdio-scanner-admin-talkgroup [form]="talkgroup" (blacklist)="blacklistTalkgroup(i)"
+                            <rdio-scanner-admin-talkgroup *ngIf="tg_panel.expanded" [form]="talkgroup" (blacklist)="blacklistTalkgroup(i)"
                                 (remove)="removeTalkgroup(i)">
                             </rdio-scanner-admin-talkgroup>
                         </ng-template>

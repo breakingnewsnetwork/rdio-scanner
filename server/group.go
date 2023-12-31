@@ -211,10 +211,11 @@ func (groups *Groups) Read(db *Database) error {
 
 func (groups *Groups) Write(db *Database) error {
 	var (
-		count  uint
-		err    error
-		rows   *sql.Rows
-		rowIds = []uint{}
+		err           error
+		rows          *sql.Rows
+		rowIds        = []uint{}
+		matchedGroups = make(map[uint]bool)
+		updatedGroups = make(map[uint]bool)
 	)
 
 	groups.mutex.Lock()
@@ -224,24 +225,30 @@ func (groups *Groups) Write(db *Database) error {
 		return fmt.Errorf("groups.write %v", err)
 	}
 
-	if rows, err = db.Sql.Query("select `_id` from `rdioScannerGroups`"); err != nil {
+	groupsMap := make(map[any]*Group)
+	for _, group := range groups.List {
+		groupsMap[group.Id] = group
+	}
+
+	if rows, err = db.Sql.Query("select `_id`, `label` from `rdioScannerGroups`"); err != nil {
 		return formatError(err)
 	}
 
 	for rows.Next() {
 		var rowId uint
-		if err = rows.Scan(&rowId); err != nil {
+		var rowLabel string
+		if err = rows.Scan(&rowId, &rowLabel); err != nil {
 			break
 		}
-		remove := true
-		for _, group := range groups.List {
-			if group.Id == nil || group.Id == rowId {
-				remove = false
-				break
+
+		if group, ok := groupsMap[rowId]; ok {
+			if group.Id == rowId && group.Label == rowLabel {
+				matchedGroups[rowId] = true
+			} else {
+				updatedGroups[rowId] = true //group was updated
 			}
-		}
-		if remove {
-			rowIds = append(rowIds, rowId)
+		} else { //not found
+			rowIds = append(rowIds, rowId) //group was deleted
 		}
 	}
 
@@ -264,17 +271,18 @@ func (groups *Groups) Write(db *Database) error {
 	}
 
 	for _, group := range groups.List {
-		if err = db.Sql.QueryRow("select count(*) from `rdioScannerGroups` where `_id` = ?", group.Id).Scan(&count); err != nil {
-			break
+		if _, ok := matchedGroups[group.Id.(uint)]; ok {
+			continue
 		}
 
-		if count == 0 {
+		if _, ok := updatedGroups[group.Id.(uint)]; ok {
+			if _, err = db.Sql.Exec("update `rdioScannerGroups` set `_id` = ?, `label` = ? where `_id` = ?", group.Id, group.Label, group.Id); err != nil {
+				break
+			}
+		} else {
 			if _, err = db.Sql.Exec("insert into `rdioScannerGroups` (`_id`, `label`) values (?, ?)", group.Id, group.Label); err != nil {
 				break
 			}
-
-		} else if _, err = db.Sql.Exec("update `rdioScannerGroups` set `_id` = ?, `label` = ? where `_id` = ?", group.Id, group.Label, group.Id); err != nil {
-			break
 		}
 	}
 

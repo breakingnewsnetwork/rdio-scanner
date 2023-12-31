@@ -5,7 +5,7 @@
 </div>
 <p *ngIf="!apiKeys.length" class="mat-small text-center">No defined API keys</p>
 <mat-accordion displayMode="flat" cdkDropList [cdkDropListAutoScrollStep]=64 [cdkDropListData]="apiKeys" (cdkDropListDropped)="drop($event)">
-    <mat-expansion-panel *ngFor="let apiKey of apiKeys; index as i" cdkDrag>
+    <mat-expansion-panel #panel *ngFor="let apiKey of apiKeys; index as i" cdkDrag>
         <mat-expansion-panel-header>
             <mat-panel-title>
                 <mat-icon cdkDragHandle>drag_indicator</mat-icon>
@@ -13,7 +13,7 @@
                 <mat-icon *ngIf="apiKey.invalid" color="warn">error</mat-icon>
             </mat-panel-title>
         </mat-expansion-panel-header>
-        <ng-container [formGroup]="apiKey">
+        <ng-container *ngIf="panel.expanded" [formGroup]="apiKey">
             <div class="row">
                 <p>
                     <span class="mat-body">Disabled</span><br>
