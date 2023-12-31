@@ -403,8 +403,8 @@ func (systems *Systems) Write(db *Database) error {
 		rows           *sql.Rows
 		rowIds         = []uint{}
 		systemIds      = []uint{}
-		matchedSystems = make(map[uint]bool)
-		updatedSystems = make(map[uint]bool)
+		matchedSystems = make(map[any]bool)
+		updatedSystems = make(map[any]bool)
 	)
 
 	systems.mutex.Lock()
@@ -505,7 +505,7 @@ func (systems *Systems) Write(db *Database) error {
 	}
 
 	for _, system := range systems.List {
-		if _, ok := matchedSystems[system.RowId.(uint)]; ok {
+		if _, ok := matchedSystems[system.RowId]; ok {
 			if err = system.Talkgroups.Write(db, system.Id); err != nil {
 				return err
 			}
