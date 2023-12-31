@@ -72,3 +72,14 @@ You can enjoy your [Rdio Scanner](https://github.com/chuot/rdio-scanner) on the 
 Commercial support is available at **[https://saubeo.solutions/](https://saubeo.solutions)**.
 
 **Happy Rdio scanning !**
+```
+cd /home/dstaigys/rdio-scanner
+git pull
+make
+sudo bash
+cd /home/izzy/rdio-scanner/
+systemctl stop rdio-scanner
+cp /home/dstaigys/rdio-scanner/dist/linux-amd64/rdio-scanner rdio-scanner
+systemctl start rdio-scanner
+journalctl -u rdio-scanner -f
+```

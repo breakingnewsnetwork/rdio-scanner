@@ -257,6 +257,8 @@ func (controller *Controller) IngestCall(call *Call) {
 	}
 
 	if populated {
+		start := time.Now()
+		controller.Logs.LogEvent(LogLevelInfo, "start new system populate")
 		if err = controller.Systems.Write(controller.Database); err != nil {
 			logError(err)
 			return
@@ -266,6 +268,9 @@ func (controller *Controller) IngestCall(call *Call) {
 			logError(err)
 			return
 		}
+
+		duration := time.Since(start)
+		controller.Logs.LogEvent(LogLevelInfo, "new system populated and took: "+duration.String())
 
 		controller.EmitConfig()
 	}
