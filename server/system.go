@@ -528,12 +528,12 @@ func (systems *Systems) Write(db *Database) error {
 		}
 
 		if count != 0 {
-			fmt.Printf("systems.write update system: %+v", count)
+			fmt.Printf("systems.write update system: %+v\n", count)
 			if _, err = db.Sql.Exec("update `rdioScannerSystems` set `_id` = ?, `autoPopulate` = ?, `blacklists` = ?, `id` = ?, `label` = ?, `led` = ?, `order` = ? where `_id` = ?", system.RowId, system.AutoPopulate, blacklists, system.Id, system.Label, system.Led, system.Order, system.RowId); err != nil {
 				break
 			}
 		} else {
-			fmt.Printf("systems.write insert system: %+v", count)
+			fmt.Printf("systems.write insert system: %+v\n", count)
 			if _, err = db.Sql.Exec("insert into `rdioScannerSystems` (`_id`, `autoPopulate`, `blacklists`, `id`, `label`, `led`, `order`) values (?, ?, ?, ?, ?, ?, ?)", system.RowId, system.AutoPopulate, blacklists, system.Id, system.Label, system.Led, system.Order); err != nil {
 				break
 			}
@@ -546,6 +546,47 @@ func (systems *Systems) Write(db *Database) error {
 		if err = system.Units.Write(db, system.Id); err != nil {
 			return err
 		}
+	}
+
+	if err != nil {
+		return formatError(err)
+	}
+
+	return nil
+}
+
+func (systems *Systems) WriteSingle(db *Database, system *System, talkgroup *Talkgroup) error {
+	var (
+		blacklists string
+		count      uint
+		err        error
+	)
+
+	systems.mutex.Lock()
+	defer systems.mutex.Unlock()
+
+	formatError := func(err error) error {
+		return fmt.Errorf("systems.write: %+v", err)
+	}
+
+	if err = db.Sql.QueryRow("select count(*) from `rdioScannerSystems` where `id` = ?", system.Id).Scan(&count); err != nil {
+		return formatError(err)
+	}
+
+	if count != 0 {
+		fmt.Printf("systems.write update system: %+v\n", count)
+		if _, err = db.Sql.Exec("update `rdioScannerSystems` set `_id` = ?, `autoPopulate` = ?, `blacklists` = ?, `id` = ?, `label` = ?, `led` = ?, `order` = ? where `_id` = ?", system.RowId, system.AutoPopulate, blacklists, system.Id, system.Label, system.Led, system.Order, system.RowId); err != nil {
+			return formatError(err)
+		}
+	} else {
+		fmt.Printf("systems.write insert system: %+v\n", count)
+		if _, err = db.Sql.Exec("insert into `rdioScannerSystems` (`_id`, `autoPopulate`, `blacklists`, `id`, `label`, `led`, `order`) values (?, ?, ?, ?, ?, ?, ?)", system.RowId, system.AutoPopulate, blacklists, system.Id, system.Label, system.Led, system.Order); err != nil {
+			return formatError(err)
+		}
+	}
+
+	if err = system.Talkgroups.WriteSingle(db, system.Id, talkgroup); err != nil {
+		return formatError(err)
 	}
 
 	if err != nil {

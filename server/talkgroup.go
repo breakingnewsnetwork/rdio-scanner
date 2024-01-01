@@ -301,4 +301,34 @@ func (talkgroups *Talkgroups) Write(db *Database, systemId uint) error {
 	return nil
 }
 
+func (talkgroups *Talkgroups) WriteSingle(db *Database, systemId uint, talkgroup *Talkgroup) error {
+	var (
+		err   error
+		count uint
+	)
+
+	talkgroups.mutex.Lock()
+	defer talkgroups.mutex.Unlock()
+
+	formatError := func(err error) error {
+		return fmt.Errorf("talkgroups.write: %+v", err)
+	}
+
+	if err = db.Sql.QueryRow("select count(*) from `rdioScannerTalkgroups` where `id` = ? and `systemId` = ?", talkgroup.Id, systemId).Scan(&count); err != nil {
+		return formatError(err)
+	}
+
+	if count != 0 {
+		if _, err = db.Sql.Exec("update `rdioScannerTalkgroups` set `frequency` = ?, `groupId` = ?, `label` = ?, `led` = ?, `name` = ?, `order` = ?, `tagId` = ? where `id` = ? and `systemId` = ?", talkgroup.Frequency, talkgroup.GroupId, talkgroup.Label, talkgroup.Led, talkgroup.Name, talkgroup.Order, talkgroup.TagId, talkgroup.Id, systemId); err != nil {
+			return formatError(err)
+		}
+	} else {
+		if _, err = db.Sql.Exec("insert into `rdioScannerTalkgroups` (`frequency`, `groupId`, `id`, `label`, `led`, `name`, `order`, `systemId`, `tagId`) values (?, ?, ?, ?, ?, ?, ?, ?, ?)", talkgroup.Frequency, talkgroup.GroupId, talkgroup.Id, talkgroup.Label, talkgroup.Led, talkgroup.Name, talkgroup.Order, systemId, talkgroup.TagId); err != nil {
+			return formatError(err)
+		}
+	}
+
+	return nil
+}
+
 type TalkgroupsMap []TalkgroupMap

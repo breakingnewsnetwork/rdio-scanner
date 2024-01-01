@@ -258,8 +258,8 @@ func (controller *Controller) IngestCall(call *Call) {
 
 	if populated {
 		start := time.Now()
-		controller.Logs.LogEvent(LogLevelInfo, "start new system populate "+system.Label+" talkgroup "+talkgroup.Label)
-		if err = controller.Systems.Write(controller.Database); err != nil {
+		controller.Logs.LogEvent(LogLevelWarn, "start new system populate "+system.Label+" talkgroup "+talkgroup.Label)
+		if err = controller.Systems.WriteSingle(controller.Database, system, talkgroup); err != nil {
 			logError(err)
 			return
 		}
@@ -270,7 +270,7 @@ func (controller *Controller) IngestCall(call *Call) {
 		}
 
 		duration := time.Since(start)
-		controller.Logs.LogEvent(LogLevelInfo, "new system populated and took: "+duration.String())
+		controller.Logs.LogEvent(LogLevelWarn, "new system populated and took: "+duration.String())
 
 		controller.EmitConfig()
 	}
