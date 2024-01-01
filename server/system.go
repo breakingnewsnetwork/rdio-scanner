@@ -397,8 +397,8 @@ func (systems *Systems) Read(db *Database) error {
 
 func (systems *Systems) Write(db *Database) error {
 	var (
-		blacklists string
-		//count          uint
+		blacklists     string
+		count          uint
 		err            error
 		rows           *sql.Rows
 		rowIds         = []uint{}
@@ -523,7 +523,11 @@ func (systems *Systems) Write(db *Database) error {
 			blacklists = "[]"
 		}
 
-		if _, ok := updatedSystems[system.RowId]; ok {
+		if err = db.Sql.QueryRow("select count(*) from `rdioScannerSystems` where `_id` = ?", system.RowId).Scan(&count); err != nil {
+			break
+		}
+
+		if count != 0 {
 			if _, err = db.Sql.Exec("update `rdioScannerSystems` set `_id` = ?, `autoPopulate` = ?, `blacklists` = ?, `id` = ?, `label` = ?, `led` = ?, `order` = ? where `_id` = ?", system.RowId, system.AutoPopulate, blacklists, system.Id, system.Label, system.Led, system.Order, system.RowId); err != nil {
 				break
 			}

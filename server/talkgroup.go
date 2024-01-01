@@ -200,6 +200,7 @@ func (talkgroups *Talkgroups) Read(db *Database, systemId uint) error {
 func (talkgroups *Talkgroups) Write(db *Database, systemId uint) error {
 	var (
 		err                 error
+		count               uint
 		removedTalkgroupIds = []uint{}
 		rows                *sql.Rows
 		matchedTg           = make(map[any]bool)
@@ -278,7 +279,11 @@ func (talkgroups *Talkgroups) Write(db *Database, systemId uint) error {
 			continue
 		}
 
-		if _, ok := updatedTg[talkgroup.Id]; ok {
+		if err = db.Sql.QueryRow("select count(*) from `rdioScannerTalkgroups` where `id` = ? and `systemId` = ?", talkgroup.Id, systemId).Scan(&count); err != nil {
+			return formatError(err)
+		}
+
+		if count != 0 {
 			if _, err = db.Sql.Exec("update `rdioScannerTalkgroups` set `frequency` = ?, `groupId` = ?, `label` = ?, `led` = ?, `name` = ?, `order` = ?, `tagId` = ? where `id` = ? and `systemId` = ?", talkgroup.Frequency, talkgroup.GroupId, talkgroup.Label, talkgroup.Led, talkgroup.Name, talkgroup.Order, talkgroup.TagId, talkgroup.Id, systemId); err != nil {
 				break
 			}
