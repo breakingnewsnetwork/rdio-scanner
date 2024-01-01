@@ -83,3 +83,21 @@ cp /home/dstaigys/rdio-scanner/dist/linux-amd64/rdio-scanner rdio-scanner
 systemctl start rdio-scanner
 journalctl -u rdio-scanner -f
 ```
+
+# nginx setup
+* stop rdio server and update port and db
+* start rdio server
+```
+apt install nginx
+sudo apt install certbot python3-certbot-nginx
+
+nano /etc/nginx/sites-available/rdio.bnn.us
+sudo ln -s /etc/nginx/sites-available/rdio.bnn.us /etc/nginx/sites-enabled/
+sudo nano /etc/nginx/nginx.conf
+# enbale server_names_hash_bucket_size 64;
+
+sudo nginx -t
+sudo systemctl restart nginx
+
+sudo certbot --nginx -d rdio.bnn.us -d vscan.bnn.us
+```
