@@ -523,15 +523,17 @@ func (systems *Systems) Write(db *Database) error {
 			blacklists = "[]"
 		}
 
-		if err = db.Sql.QueryRow("select count(*) from `rdioScannerSystems` where `_id` = ?", system.RowId).Scan(&count); err != nil {
+		if err = db.Sql.QueryRow("select count(*) from `rdioScannerSystems` where `id` = ?", system.Id).Scan(&count); err != nil {
 			break
 		}
 
 		if count != 0 {
+			fmt.Printf("systems.write update system: %+v", count)
 			if _, err = db.Sql.Exec("update `rdioScannerSystems` set `_id` = ?, `autoPopulate` = ?, `blacklists` = ?, `id` = ?, `label` = ?, `led` = ?, `order` = ? where `_id` = ?", system.RowId, system.AutoPopulate, blacklists, system.Id, system.Label, system.Led, system.Order, system.RowId); err != nil {
 				break
 			}
 		} else {
+			fmt.Printf("systems.write insert system: %+v", count)
 			if _, err = db.Sql.Exec("insert into `rdioScannerSystems` (`_id`, `autoPopulate`, `blacklists`, `id`, `label`, `led`, `order`) values (?, ?, ?, ?, ?, ?, ?)", system.RowId, system.AutoPopulate, blacklists, system.Id, system.Label, system.Led, system.Order); err != nil {
 				break
 			}
